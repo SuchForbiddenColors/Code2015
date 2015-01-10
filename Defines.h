@@ -3,6 +3,8 @@
 
 #define XSTICK_PORT 1
 
+#define TURN_INVERT -1
+
 #define X_A 1
 #define X_B 2
 #define X_X 3
@@ -13,3 +15,4 @@
 #define X_START 8
 #define X_LEFT_CLICK 9
 #define X_RIGHT_CLICK 10
+
