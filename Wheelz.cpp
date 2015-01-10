@@ -17,7 +17,7 @@ void Wheelz::DissectedDrive(float forward, float turn)
 		float value = log(-turn);
 		float ratio = (value - m_sensitivity)/(value + m_sensitivity); //This is pre-existing library code
 		if (ratio == 0) ratio =.0000000001;							  // I'm not familiar with its use, so just roll with it
-			leftSpeed = forward / ratio;
+			leftSpeed = forward / ratio;							 //  It's here in case we need to modify it
 			rightSpeed = forward;
 	}
 	else if (turn > 0)
@@ -39,9 +39,9 @@ void Wheelz::DissectedDrive(float forward, float turn)
 
 void Wheelz::XDrive(GenericHID *XStick)
 {
-	float forward = XStick->GetRawAxis(2); //2 is a controller's LeftY
+	float forward = XStick->GetRawAxis(1); //2 is a controller's LeftY
 	float turn = XStick->GetRawAxis(4); //4 is a controller's RightX
-	float turbo = XStick->GetRawAxis(3); //3  either Trigger, but will only work if use Left Trigger, which
+	float turbo = XStick->GetRawAxis(2); //3  either Trigger, but will only work if use Left Trigger, which
 										//controls the axis from 0-1
 
 	if(turbo <= 0) //So we ignore inputs from the Right Trigger
@@ -50,7 +50,7 @@ void Wheelz::XDrive(GenericHID *XStick)
 	}
 	else
 	{
-		turbo = turbo / 2; //So output will range from 0 to .5, to add to default speed
+		turbo = turbo / 2; //So turbo output will range from 0 to .5, to add to default speed
 	}
 
 	if(fabs(forward) < .01)	//To buffer; XStick is sensitive
@@ -75,6 +75,8 @@ void Wheelz::XDrive(GenericHID *XStick)
 
 	forward *= (.5 + turbo); //So default speed is .5, modified by turbo to a max of 1
 
+	turn *= TURN_INVERT;
+
 	DissectedDrive(forward, turn);
 
 
@@ -89,4 +91,5 @@ void Wheelz::SetExpiration(float exp)
 {
 	wheels->SetExpiration(exp);
 }
+
 
