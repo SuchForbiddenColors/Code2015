@@ -2,6 +2,7 @@
 //#include "Wheelz.h"
 //#include "Pneumatics.h" //We get them from Dash now
 #include "Defines.h"
+#include "Math.h"
 #include "Dash.h"
 
 using namespace std;
@@ -19,15 +20,19 @@ class Robot: public SampleRobot
 	Wheelz *wheels;
 	Pneumatics *air;
 	Dash * dash;
+	Timer *time;
 	Joystick *XStick;
+	Victor *testMotor;
 
 public:
 	Robot()
 	{
-		wheels = new Wheelz(MOTOR_DRIVE_LEFT, MOTOR_DRIVE_RIGHT);
+		wheels = new Wheelz(MOTOR_DRIVE_LEFT, MOTOR_DRIVE_RIGHT, ENCODER_CHANNEL_A, ENCODER_CHANNEL_B);
 		XStick = new Joystick(XSTICK_PORT);
 		air = new Pneumatics();
 		dash = new Dash(wheels, air);
+		time = new Timer();
+		testMotor = new Victor(TEST_MOTOR_CHANNEL);
 
 		wheels->SetExpiration(.5);
 	}
@@ -45,20 +50,33 @@ public:
 	{
 
 		wheels->InitWatchdog(true);
-		SmartDashboard::PutString("DB/String 0", "2Explosions");
-		//Can't yet PutNumbers in
+		dash->PutString(1, "Relinquished");
+
+		bool testHasBeenPressed;
+
+		time->Stop(); time->Reset();
 
 		string cat;
 		cat = SmartDashboard::GetString("DB/String 5");
 		SmartDashboard::PutString("DB/String 6", cat);  //This works!
+		
+		double rotationCount;
 
 		while (IsOperatorControl() && IsEnabled())
 		{
-			wheels->XDrive(XStick);
+
+			wheels->CarefulDrive(XStick);
+
+			rotationCount = wheels->GetEncoder() / ENCODER_ONE_PULSES_PER_REVOLUTION;
+			rotationCount *= 100; // Make't a percentage
+
+			dash->PutNumber(1, rotationCount);
+
+			dash->PutNumber(2, wheels->GetEncoder());
 
 			if(XStick->GetRawButton(X_A))
 			{
-				air->SolenoidFlip(1);
+				testMotor->Set(0);
 			}
 
 			if(XStick->GetRawButton(X_B))
@@ -68,12 +86,39 @@ public:
 
 			if(XStick->GetRawButton(X_X))
 			{
-				air->SolenoidFlip(3);
+				testHasBeenPressed = true;
 			}
+			else
+			{
+				testHasBeenPressed = false;
+			}
+
+			if(testHasBeenPressed)
+			{
+				time->Start();
+				float speed;
+				speed = time->Get() / 3; //Time returns in seconds
+
+				if(speed > 1)
+				{speed = 1;}
+
+				testMotor->Set(speed);
+			}
+			else
+			{
+				time->Stop();
+				time->Reset();
+				testMotor->Set(0);
+			}
+
 
 			if(XStick->GetRawButton(X_Y))
 			{
-				air->SolenoidFlip(4);
+				if(XStick->GetRawButton(X_LEFT_BUMPER))
+				{
+					wheels->EncoderTurn(-2, testMotor);
+				}
+				else {wheels->EncoderTurn(2, testMotor);}
 			}
 
 			Wait(0.005);				// wait for a motor update time

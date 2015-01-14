@@ -15,8 +15,9 @@ protected:
 public:
 	Dash(Wheelz *wheels, Pneumatics *air);
 	void PutString(int lineNum, string message);
-
+	void PutNumber(int sliderNum, float number);
 
 
 
 };
+
