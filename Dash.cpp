@@ -62,3 +62,23 @@ void Dash::PutString(int lineNum, string message)
 			SmartDashboard::PutString("DB/String 9", message);
 		}
 }
+
+void Dash::PutNumber(int sliderNum, float number)
+{
+	if(sliderNum == 1)
+		{
+			SmartDashboard::PutNumber("DB/Slider 0", number);
+		}
+	if(sliderNum == 2)
+		{
+			SmartDashboard::PutNumber("DB/Slider 1", number);
+		}
+	if(sliderNum == 3)
+		{
+			SmartDashboard::PutNumber("DB/Slider 2", number);
+		}
+	if(sliderNum == 4)
+		{
+			SmartDashboard::PutNumber("DB/Slider 3", number);
+		}
+}
