@@ -4,10 +4,11 @@
 using namespace std;
 
 
-Dash::Dash(Wheelz *wheels, Pneumatics *air)
+Dash::Dash(Wheelz *wheels, Pneumatics *air, BuiltInAccelerometer *excel)
 {
 	whe = wheels;
 	pne = air;
+	ace = excel;
 }
 
 void Dash::PutString(int lineNum, string message)
@@ -82,3 +83,109 @@ void Dash::PutNumber(int sliderNum, float number)
 			SmartDashboard::PutNumber("DB/Slider 3", number);
 		}
 }
+
+string Dash::GetString(int lineNum)
+{
+	string word;
+
+	if(lineNum == 1)
+		{
+			word = SmartDashboard::GetString("DB/String 0");
+		}
+
+	if(lineNum == 2)
+		{
+			word = SmartDashboard::GetString("DB/String 1");
+		}
+
+	if(lineNum == 3)
+		{
+			word = SmartDashboard::GetString("DB/String 2");
+		}
+
+	if(lineNum == 4)
+		{
+			word = SmartDashboard::GetString("DB/String 3");
+		}
+
+	if(lineNum == 5)
+		{
+			word = SmartDashboard::GetString("DB/String 4");
+		}
+
+	if(lineNum == 6)
+		{
+			word = SmartDashboard::GetString("DB/String 5");
+		}
+
+	if(lineNum == 7)
+		{
+			word = SmartDashboard::GetString("DB/String 6");
+		}
+
+	if(lineNum == 8)
+		{
+			word = SmartDashboard::GetString("DB/String 7");
+		}
+
+	if(lineNum == 9)
+		{
+			word = SmartDashboard::GetString("DB/String 8");
+		}
+
+	if(lineNum == 10)
+		{
+			word = SmartDashboard::GetString("DB/String 9");
+		}
+
+	return word;
+}
+
+float Dash::GetNumber(int sliderNum)
+{
+	float value;
+
+	if(sliderNum == 1)
+		{
+			value = SmartDashboard::GetNumber("DB/Slider 0");
+		}
+	if(sliderNum == 2)
+		{
+			value = SmartDashboard::GetNumber("DB/Slider 1");
+		}
+	if(sliderNum == 3)
+		{
+			value = SmartDashboard::GetNumber("DB/Slider 2");
+		}
+	if(sliderNum == 4)
+		{
+			value = SmartDashboard::GetNumber("DB/Slider 3");
+		}
+
+	return value;
+}
+
+void Dash::EncoderCount(int sliderNum)
+{
+	float rotationCount = whe->GetEncoder() / ENCODER_ONE_PULSES_PER_REVOLUTION;
+	rotationCount *= 100; //Make it a percentage
+
+	PutNumber(sliderNum, rotationCount);
+}
+
+void Dash::Acceleration(int sliderNum, int axis)
+{
+	if(axis == 1)
+	{
+		PutNumber(sliderNum, ace->GetX());
+	}
+	else if(axis == 2)
+	{
+		PutNumber(sliderNum, ace->GetY());
+	}
+	else if(axis == 3)
+	{
+		PutNumber(sliderNum, ace->GetZ());
+	}
+}
+
