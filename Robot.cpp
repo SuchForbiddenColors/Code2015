@@ -19,6 +19,9 @@ class Robot: public SampleRobot
 {
 	Wheelz *wheels;
 	Pneumatics *air;
+	BuiltInAccelerometer *excel;
+	CameraServer *camera;
+	Vision *sight;
 	Dash * dash;
 	Timer *time;
 	Joystick *XStick;
@@ -30,11 +33,15 @@ public:
 		wheels = new Wheelz(MOTOR_DRIVE_LEFT, MOTOR_DRIVE_RIGHT, ENCODER_CHANNEL_A, ENCODER_CHANNEL_B);
 		XStick = new Joystick(XSTICK_PORT);
 		air = new Pneumatics();
-		dash = new Dash(wheels, air);
+		excel = new BuiltInAccelerometer();
+		camera = CameraServer::GetInstance();
+		sight = new Vision();
+		dash = new Dash(wheels, air, excel);
 		time = new Timer();
 		testMotor = new Victor(TEST_MOTOR_CHANNEL);
 
 		wheels->SetExpiration(.5);
+cout<<"robotProgram here";
 	}
 
 
@@ -49,34 +56,37 @@ public:
 	void OperatorControl()
 	{
 
-		wheels->InitWatchdog(true);
+		//wheels->InitWatchdog(true); //TODO: Doesn't work; kinda need it.
 		dash->PutString(1, "Relinquished");
 
 		bool testHasBeenPressed;
 
 		time->Stop(); time->Reset();
 
-		string cat;
-		cat = SmartDashboard::GetString("DB/String 5");
-		SmartDashboard::PutString("DB/String 6", cat);  //This works!
-		
-		double rotationCount;
+		dash->PutString(6, dash->GetString(5)); //Works
+
+		sight->StartImageAcquisition();
 
 		while (IsOperatorControl() && IsEnabled())
 		{
 
 			wheels->CarefulDrive(XStick);
 
-			rotationCount = wheels->GetEncoder() / ENCODER_ONE_PULSES_PER_REVOLUTION;
-			rotationCount *= 100; // Make't a percentage
+			dash->EncoderCount(1); //Read the percentage of rotations on slider 1 //Works
 
-			dash->PutNumber(1, rotationCount);
+			dash->PutNumber(2, wheels->GetEncoder());  //TODO: obsolete PutNumber/String as public functions, move them to private
 
-			dash->PutNumber(2, wheels->GetEncoder());
+			dash->Acceleration(3, 2); //Read Y acceleration on slider 3
+
+			dash->Acceleration(4, 3); //Read Z acceleration on slider 4 //Works
+
+			//sight->DrawOval();
+
+			sight->PutImage(); //Works
 
 			if(XStick->GetRawButton(X_A))
 			{
-				testMotor->Set(0);
+				air->SolenoidFlip(1);
 			}
 
 			if(XStick->GetRawButton(X_B))
@@ -93,7 +103,7 @@ public:
 				testHasBeenPressed = false;
 			}
 
-			if(testHasBeenPressed)
+			if(testHasBeenPressed) //Works
 			{
 				time->Start();
 				float speed;
@@ -116,13 +126,14 @@ public:
 			{
 				if(XStick->GetRawButton(X_LEFT_BUMPER))
 				{
-					wheels->EncoderTurn(-2, testMotor);
+					wheels->TurnEncoder(-2, testMotor, .6);
 				}
-				else {wheels->EncoderTurn(2, testMotor);}
+				else {wheels->TurnEncoder(2, testMotor, .6);}
 			}
 
 			Wait(0.005);				// wait for a motor update time
 		}
+		sight->StopImageAcquisition();
 	}
 
 	/**
@@ -134,3 +145,4 @@ public:
 };
 
 START_ROBOT_CLASS(Robot);
+
