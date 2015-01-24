@@ -95,22 +95,26 @@ void Wheelz::CarefulDrive(GenericHID * XStick)
 		forwardInput = 0; //Light buffer
 	}
 
-	if(fabs(turnInput) < .075)
+	if(fabs(turnInput) < .13)
 	{
 		turnInput = 0; //Heavy buffer; because any turning precludes forward motion
 	}
 
 	if(turnInput == 0)
 	{
-		forwardInput *= .4;  //Max of 40% speed
+		forwardInput *= CAREFUL_DRIVE_MAX_FORWARD;
 		turn = 0;
 		forward = forwardInput;  //So you only move forward/backward
 	}
 	else //With a nonzero turn input...
 	{
 		turn = 1;  //We only turn...
-		forward = turnInput; //At a speed decided by the turn input
+		forward = turnInput * CAREFUL_DRIVE_MAX_TURN; //At a speed decided by the turn input
+							                         // If turn input is negative, we still give the positive turn value,
+						                            //  but the robot will be going "backward", so it will turn the other way
 	}
+
+	DissectedDrive(forward, turn);
 }
 
 float Wheelz::GetEncoder()
@@ -125,7 +129,7 @@ bool Wheelz::GetDirectionEncoder()
 	return value;
 }
 
-void Wheelz::EncoderTurn(float rotations, Victor *testMotor)
+void Wheelz::TurnEncoder(float rotations, Victor *testMotor, float speed)
 {
 	float startingRotation;
 	float currentRotations = 0;
@@ -137,7 +141,7 @@ void Wheelz::EncoderTurn(float rotations, Victor *testMotor)
 		{
 			currentRotations = (encoder->Get() / ENCODER_ONE_PULSES_PER_REVOLUTION) - startingRotation;
 
-			testMotor->Set(.5);
+			testMotor->Set(speed);
 
 		}
 		testMotor->Set(0);
@@ -149,7 +153,7 @@ void Wheelz::EncoderTurn(float rotations, Victor *testMotor)
 		{
 			currentRotations = (encoder->Get() / ENCODER_ONE_PULSES_PER_REVOLUTION) - startingRotation;
 
-			testMotor->Set(-.5);
+			testMotor->Set(-speed);
 
 		}
 		testMotor->Set(0);
