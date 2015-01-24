@@ -16,7 +16,7 @@ public:
 
 	float GetEncoder();
 	bool GetDirectionEncoder();
-	void EncoderTurn(float rotations, Victor *testMotor);
+	void TurnEncoder(float rotations, Victor *testMotor, float speed);
 
 	void InitWatchdog(bool is);
 	void SetExpiration(float exp);
