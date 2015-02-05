@@ -19,6 +19,10 @@ protected:
 	bool a_HasBeenPressed;
 	bool b_HasBeenPressed;
 
+	float leftEnergy;
+	float rightEnergy;
+	float distance; //TODO: Get leftDistance and rightDistance after we have wheel-specific encoders
+
 public:
 	Dash(Wheelz *wheels, Pneumatics *air, BuiltInAccelerometer *excel, Joystick *XStick);
 	void PutString(int lineNum, string message);
@@ -27,8 +31,12 @@ public:
 	string GetString(int lineNum); //Returns the string at a line of the dashboard
 	float GetNumber(int sliderNum); //Returns the number at a slider of the dashboard
 
+	void AddEnergyToTotal(double time);
+	void SetDistance();
+
 	void EncoderCount(int sliderNum); //Writes the percentage of encoder rotations on a slider on the dashboard
 	void Acceleration(int sliderNum, int axis);
+	void DistancePerEnergy(int sliderNum);
 
 	bool StickyPress(char button); //Will work best if run every loop
 };

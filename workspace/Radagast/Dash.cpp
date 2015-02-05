@@ -15,6 +15,10 @@ Dash::Dash(Wheelz *wheels, Pneumatics *air, BuiltInAccelerometer *excel, Joystic
 	y_HasBeenPressed = false;
 	a_HasBeenPressed = false;
 	b_HasBeenPressed = false;
+
+	leftEnergy = 0;
+	rightEnergy = 0;
+	distance = 0;
 }
 
 void Dash::PutString(int lineNum, string message)
@@ -171,6 +175,21 @@ float Dash::GetNumber(int sliderNum)
 	return value;
 }
 
+void Dash::AddEnergyToTotal(double time)
+{
+	leftEnergy += time * whe->leftMotorInput;
+				//The energy we told left motor to be at, times the time, in seconds,
+			   // we told it to be at that energy for.
+
+	rightEnergy += time * whe->rightMotorInput;
+}
+
+void Dash::SetDistance()
+{
+	distance = whe->GetEncoder() / ENCODER_ONE_PULSES_PER_REVOLUTION * DRIVE_WHEEL_DISTANCE_PER_REVOLUTION;
+										//Turns pulses into distance in feet
+}
+
 void Dash::EncoderCount(int sliderNum)
 {
 	float rotationCount = whe->GetEncoder() / ENCODER_ONE_PULSES_PER_REVOLUTION;
@@ -193,6 +212,19 @@ void Dash::Acceleration(int sliderNum, int axis)
 	{
 		PutNumber(sliderNum, ace->GetZ());
 	}
+}
+
+void Dash::DistancePerEnergy(int sliderNum)
+{
+	float ratio;
+	if(leftEnergy == 0)
+	{
+		ratio = 0;
+	}
+
+	ratio = distance / leftEnergy;
+
+	PutNumber(sliderNum, ratio);
 }
 
 bool Dash::StickyPress(char button)

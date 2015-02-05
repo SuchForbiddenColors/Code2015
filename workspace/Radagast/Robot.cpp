@@ -74,6 +74,11 @@ public:
 		while (IsOperatorControl() && IsEnabled())
 		{
 
+			//Analyzing previous loop
+
+			dash->AddEnergyToTotal(time->Get());
+			dash->SetDistance();
+
 			//How's My Driving?
 
 			if(driveCareful)
@@ -85,15 +90,19 @@ public:
 				wheels->XDrive(XStick);
 			}
 
+			time->Stop();
+			time->Reset();
+			time->Start();
+
 			//Dashboard functions
 
 			dash->EncoderCount(1); //Read the percentage of rotations on slider 1 //Works
 
 			dash->PutNumber(2, wheels->GetEncoder());  //TODO: obsolete PutNumber/String as public functions, move them to private
 
-			dash->Acceleration(3, 2); //Read Y acceleration on slider 3
+			dash->Acceleration(3, 3); //Read Z acceleration on slider 3
 
-			dash->Acceleration(4, 3); //Read Z acceleration on slider 4
+			dash->DistancePerEnergy(4); //Read distance/energy ratio on slider 4
 
 			//sight->DrawOval();
 
