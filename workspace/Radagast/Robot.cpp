@@ -59,15 +59,10 @@ public:
 		dash->PutString(1, "Relinquished");
 
 		bool testHasBeenPressed = false;
-		bool flipOneHasBeenPressed = false;
-		bool flipTwoHasBeenPressed = false;
-		bool changeHasBeenPressed = false;
 
 		bool driveCareful = false;
 
 		time->Stop(); time->Reset();
-
-		dash->PutString(6, dash->GetString(5));
 
 		sight->StartImageAcquisition();
 
@@ -108,28 +103,16 @@ public:
 
 			sight->PutImage();
 
-			//The HasBeenPressed's //TODO: You still can probably make a function for this
+			//The HasBeenPressed's
 
-			if(XStick->GetRawButton(X_A) && flipOneHasBeenPressed == false)
+			if(dash->StickyPress('a'))
 			{
-				flipOneHasBeenPressed = true;
-				air->SolenoidFlip(1);
-			}
-
-			if(XStick->GetRawButton(X_B) && flipTwoHasBeenPressed == false)
-			{
-				flipTwoHasBeenPressed = true;
 				air->SolenoidFlip(2);
 			}
 
-			if(XStick->GetRawButton(X_A) == false)
+			if(dash->StickyPress('b'))
 			{
-				flipOneHasBeenPressed = false;
-			}
-
-			if(XStick->GetRawButton(X_B) == false)
-			{
-				flipTwoHasBeenPressed = false;
+				air->SolenoidFlip(2);
 			}
 
 			if(dash->StickyPress('x'))
@@ -143,24 +126,6 @@ public:
 					driveCareful = true;
 				}
 			}
-
-			/*if(XStick->GetRawButton(X_X) && changeHasBeenPressed == false)
-			{
-				changeHasBeenPressed = true;
-				if(driveCareful == true)
-				{
-					driveCareful = false;
-				}
-				else if(driveCareful == false)
-				{
-					driveCareful = true;
-				}
-			}
-
-			if(XStick->GetRawButton(X_X) == false)
-			{
-				changeHasBeenPressed = false;
-			}*/
 
 			/*if(XStick->GetRawButton(X_X))
 			{
@@ -180,7 +145,10 @@ public:
 				if(speed > 1)
 				{speed = 1;}
 
-				testMotor->Set(speed);
+				if(XStick->GetRawButton(X_LEFT_BUMPER))
+				{testMotor->Set(-speed);}
+				else
+				{testMotor->Set(speed);}
 			}
 			else
 			{
@@ -192,14 +160,14 @@ public:
 
 			//Encoder Functions
 
-			if(XStick->GetRawButton(X_Y))
+			/*if(XStick->GetRawButton(X_Y))
 			{
 				if(XStick->GetRawButton(X_LEFT_BUMPER))
 				{
 					wheels->TurnEncoder(-2, .6, .6);
 				}
 				else {wheels->TurnEncoder(2, .6, .6);}
-			}
+			}*/
 
 			Wait(0.005);				// wait for a motor update time
 		}
