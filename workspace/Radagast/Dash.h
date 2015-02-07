@@ -2,6 +2,7 @@
 #include "Wheelz.h"
 #include "Pneumatics.h"
 #include "Vision.h"
+#include "Elevator.h"
 #include "Defines.h"
 
 

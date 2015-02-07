@@ -23,6 +23,7 @@ class Robot: public SampleRobot
 	CameraServer *camera;
 	Vision *sight;
 	Dash * dash;
+	Elevator *rise;
 	Timer *time;
 	Joystick *XStick;
 	Victor *testMotor;
@@ -37,6 +38,7 @@ public:
 		camera = CameraServer::GetInstance();
 		sight = new Vision();
 		dash = new Dash(wheels, air, excel, XStick);
+		rise = new Elevator(MOTOR_LIFT_CHANNEL, UPPER_LIMIT_CHANNEL, LOWER_LIMIT_CHANNEL);
 		time = new Timer();
 		testMotor = new Victor(TEST_MOTOR_CHANNEL);
 
@@ -61,6 +63,7 @@ public:
 		bool testHasBeenPressed = false;
 
 		bool driveCareful = false;
+		bool elevatorTesting = false;
 
 		time->Stop(); time->Reset();
 
@@ -76,6 +79,11 @@ public:
 
 			//How's My Driving?
 
+			if(elevatorTesting)
+			{
+				rise->ManualLift(XStick->GetRawAxis(1)); //1 is a controller's LeftY axis
+			}
+			else
 			if(driveCareful)
 			{
 				wheels->CarefulDrive(XStick);
@@ -127,6 +135,18 @@ public:
 				}
 			}
 
+			if(dash->StickyPress('y'))
+			{
+				if(elevatorTesting == true)
+				{
+					elevatorTesting = false;
+				}
+				else if(elevatorTesting == false)
+				{
+					elevatorTesting = true;
+				}
+			}
+
 			/*if(XStick->GetRawButton(X_X))
 			{
 				testHasBeenPressed = true;
@@ -156,7 +176,6 @@ public:
 				time->Reset();
 				testMotor->Set(0);
 			}*/
-
 
 			//Encoder Functions
 
