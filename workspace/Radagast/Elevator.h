@@ -8,7 +8,8 @@ protected:
 public:
 	DigitalInput *upperLimit;
 	DigitalInput *lowerLimit;
+	AnalogPotentiometer *stringPot;
 
-	Elevator(int liftMotorPort, int upperLimitSwitchPort, int lowerLimitSwitchPort);
+	Elevator(int liftMotorPort, int stringPotPort, int upperLimitSwitchPort, int lowerLimitSwitchPort);
 	void ManualLift(float speed);
 };

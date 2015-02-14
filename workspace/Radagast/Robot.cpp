@@ -37,8 +37,8 @@ public:
 		excel = new BuiltInAccelerometer();
 		camera = CameraServer::GetInstance();
 		sight = new Vision();
-		dash = new Dash(wheels, air, excel, XStick);
-		rise = new Elevator(MOTOR_LIFT_CHANNEL, UPPER_LIMIT_CHANNEL, LOWER_LIMIT_CHANNEL);
+		rise = new Elevator(MOTOR_LIFT_CHANNEL, STRING_POTENTIOMETER_CHANNEL, UPPER_LIMIT_CHANNEL, LOWER_LIMIT_CHANNEL);
+		dash = new Dash(wheels, air, excel, XStick, rise);
 		time = new Timer();
 		testMotor = new Victor(TEST_MOTOR_CHANNEL);
 
@@ -58,7 +58,6 @@ public:
 	{
 
 		//wheels->InitWatchdog(true); //TODO: Doesn't work; kinda need it.
-		dash->PutString(1, "Relinquished");
 
 		bool testHasBeenPressed = false;
 
@@ -82,15 +81,18 @@ public:
 			if(elevatorTesting)
 			{
 				rise->ManualLift(XStick->GetRawAxis(1)); //1 is a controller's LeftY axis
+				dash->PutString(1, "Testing Elevator");
 			}
 			else
 			if(driveCareful)
 			{
 				wheels->CarefulDrive(XStick);
+				dash->PutString(1, "Careful Driving");
 			}
 			else
 			{
 				wheels->XDrive(XStick);
+				dash->PutString(1, "Normal Driving");
 			}
 
 			time->Stop();
@@ -101,11 +103,19 @@ public:
 
 			dash->EncoderCount(1); //Read the percentage of rotations on slider 1 //Works
 
-			dash->PutNumber(2, wheels->GetEncoder());  //TODO: obsolete PutNumber/String as public functions, move them to private
+			dash->PutNumber(2, wheels->GetEncoder());  //TODO: obsolete PutNumber/String
 
 			dash->Acceleration(3, 3); //Read Z acceleration on slider 3
 
-			dash->DistancePerEnergy(4); //Read distance/energy ratio on slider 4
+			dash->LiftHeight(4);
+
+			//dash->DistancePerEnergy(4); //Read distance/energy ratio on slider 4
+
+			dash->LimitSwitch(1, 1);  //Read top limit switch value on button 1
+
+			dash->LimitSwitch(2, 2);
+
+			dash->SolenoidPair(2, 1); //Read solenoid pair values on line 2
 
 			//sight->DrawOval();
 
@@ -115,7 +125,7 @@ public:
 
 			if(dash->StickyPress('a'))
 			{
-				air->SolenoidFlip(2);
+				air->SolenoidFlip(1);
 			}
 
 			if(dash->StickyPress('b'))

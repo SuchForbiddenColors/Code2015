@@ -4,17 +4,19 @@
 using namespace std;
 
 
-Dash::Dash(Wheelz *wheels, Pneumatics *air, BuiltInAccelerometer *excel, Joystick *XStick)
+Dash::Dash(Wheelz *wheels, Pneumatics *air, BuiltInAccelerometer *excel, Joystick *XStick, Elevator *rise)
 {
 	whe = wheels;
 	pne = air;
 	ace = excel;
 	one = XStick;
+	ele = rise;
 
 	x_HasBeenPressed = false;
 	y_HasBeenPressed = false;
 	a_HasBeenPressed = false;
 	b_HasBeenPressed = false;
+	start_HasBeenPressed = false;
 
 	leftEnergy = 0;
 	rightEnergy = 0;
@@ -92,6 +94,27 @@ void Dash::PutNumber(int sliderNum, float number)
 		{
 			SmartDashboard::PutNumber("DB/Slider 3", number);
 		}
+}
+
+void Dash::PutBool(int buttonNum, bool value)
+{
+	if(buttonNum == 1)
+	{
+		SmartDashboard::PutBoolean("DB/Button 0", value);
+	}
+	if(buttonNum == 2)
+	{
+		SmartDashboard::PutBoolean("DB/Button 1", value);
+	}
+	if(buttonNum == 3)
+	{
+		SmartDashboard::PutBoolean("DB/Button 2", value);
+	}
+	if(buttonNum == 4)
+	{
+		SmartDashboard::PutBoolean("DB/Button 3", value);
+	}
+
 }
 
 string Dash::GetString(int lineNum)
@@ -214,6 +237,58 @@ void Dash::Acceleration(int sliderNum, int axis)
 	}
 }
 
+void Dash::LimitSwitch(int buttonNum, int limitSwitch)
+{
+	if(limitSwitch == 1)
+	{
+		PutBool(buttonNum, ele->upperLimit->Get());
+	}
+
+	if(limitSwitch == 2)
+	{
+		PutBool(buttonNum, ele->lowerLimit->Get());
+	}
+}
+
+void Dash::SolenoidPair(int lineNumber, int solenoidPair)
+{
+	string message;
+
+	string partOne, partTwo;
+
+	if(solenoidPair == 1)
+	{
+		if(pne->solOneOn)
+		{
+			partOne = "Sol1 On ";
+		}
+		else
+		{
+			partOne = "Sol1 Off ";
+		}
+
+		if(pne->solTwoOn)
+		{
+			partTwo = "Sol2 On";
+		}
+		else
+		{
+			partTwo = "Sol2 Off";
+		}
+	}
+
+	message = partOne + partTwo;
+
+	PutString(lineNumber, message);
+}
+
+void Dash::LiftHeight(int sliderNum)
+{
+	float value = ele->stringPot->Get();
+									//Should return in inches
+	PutNumber(sliderNum, value);
+}
+
 void Dash::DistancePerEnergy(int sliderNum)
 {
 	float ratio;
@@ -222,8 +297,8 @@ void Dash::DistancePerEnergy(int sliderNum)
 		ratio = 0;
 	}
 
-	ratio = distance / leftEnergy;
-
+	ratio = distance / (leftEnergy * 40); //Want changes in distance and in energy to be noticeable
+										 // It's an art, not a science.
 	PutNumber(sliderNum, ratio);
 }
 
@@ -295,10 +370,22 @@ bool Dash::StickyPress(char button)
 
 		return false;
 	}
-	else
-	{
-		return false;
-	}
 
-}
+	if(button == 's') //s is for start
+	{
+		if(one->GetRawButton(X_START) && start_HasBeenPressed == false)
+		{
+			start_HasBeenPressed = true;
+			return true;
+		}
+
+		if(one->GetRawButton(X_START) == false)
+		{
+			start_HasBeenPressed = false;
+		}
+
+			return false;
+	}
+		return false; //If we get all the way through with no buttons selected
+}													//Just return false
 
