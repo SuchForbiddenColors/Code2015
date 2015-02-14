@@ -7,6 +7,9 @@ Wheelz::Wheelz(int leftMotor, int rightMotor, int aChannel, int bChannel)
 	wheels = new RobotDrive(leftMotor, rightMotor);
 	encoder1 = new Encoder(aChannel, bChannel);
 
+	leftMotorInput = 0;
+	rightMotorInput = 0;
+
 }
 
 void Wheelz::DissectedDrive(float forward, float turn)
@@ -41,6 +44,9 @@ void Wheelz::DissectedDrive(float forward, float turn)
 	}
 
 	wheels->SetLeftRightMotorOutputs(leftSpeed, rightSpeed);
+
+	leftMotorInput = FORWARD_INVERT * leftSpeed;
+	rightMotorInput = FORWARD_INVERT * rightSpeed;
 }
 
 void Wheelz::XDrive(GenericHID *XStick)

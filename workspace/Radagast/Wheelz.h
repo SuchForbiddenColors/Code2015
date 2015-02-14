@@ -8,6 +8,9 @@ protected:
 
 
 public:
+	float leftMotorInput;
+	float rightMotorInput;
+
 	Wheelz(int leftMotor, int rightMotor, int aChannel, int bChannel);
 
 	void XDrive(GenericHID * XStick);

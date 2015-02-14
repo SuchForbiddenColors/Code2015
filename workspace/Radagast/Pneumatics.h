@@ -4,16 +4,20 @@ class Pneumatics {
 
 protected:
 	Compressor *compress;
-	Solenoid *sol1, *sol2, *sol3, *sol4;
+	Solenoid *sol1, *sol2, *sol3, *sol4, *sol5, *sol6, *sol7, *sol8;
+
+public:
+	Pneumatics();
+	void SolenoidFlip(int solNum);
 
 	bool solOneOn;
 	bool solTwoOn;
 	bool solThreeOn;
 	bool solFourOn;
-
-public:
-	Pneumatics();
-	void SolenoidFlip(int solNum);
+	bool solFiveOn;
+	bool solSixOn;
+	bool solSevenOn;
+	bool solEightOn;
 
 
 };

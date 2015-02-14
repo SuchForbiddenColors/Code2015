@@ -23,6 +23,7 @@ class Robot: public SampleRobot
 	CameraServer *camera;
 	Vision *sight;
 	Dash * dash;
+	Elevator *rise;
 	Timer *time;
 	Joystick *XStick;
 	Victor *testMotor;
@@ -36,7 +37,8 @@ public:
 		excel = new BuiltInAccelerometer();
 		camera = CameraServer::GetInstance();
 		sight = new Vision();
-		dash = new Dash(wheels, air, excel, XStick);
+		rise = new Elevator(MOTOR_LIFT_CHANNEL, STRING_POTENTIOMETER_CHANNEL, UPPER_LIMIT_CHANNEL, LOWER_LIMIT_CHANNEL);
+		dash = new Dash(wheels, air, excel, XStick, rise);
 		time = new Timer();
 		testMotor = new Victor(TEST_MOTOR_CHANNEL);
 
@@ -56,71 +58,79 @@ public:
 	{
 
 		//wheels->InitWatchdog(true); //TODO: Doesn't work; kinda need it.
-		dash->PutString(1, "Relinquished");
 
 		bool testHasBeenPressed = false;
-		bool flipOneHasBeenPressed = false;
-		bool flipTwoHasBeenPressed = false;
-		bool changeHasBeenPressed = false;
 
 		bool driveCareful = false;
+		bool elevatorTesting = false;
 
 		time->Stop(); time->Reset();
-
-		dash->PutString(6, dash->GetString(5));
 
 		sight->StartImageAcquisition();
 
 		while (IsOperatorControl() && IsEnabled())
 		{
 
+			//Analyzing previous loop
+
+			dash->AddEnergyToTotal(time->Get());
+			dash->SetDistance();
+
 			//How's My Driving?
 
+			if(elevatorTesting)
+			{
+				rise->ManualLift(XStick->GetRawAxis(1)); //1 is a controller's LeftY axis
+				dash->PutString(1, "Testing Elevator");
+			}
+			else
 			if(driveCareful)
 			{
 				wheels->CarefulDrive(XStick);
+				dash->PutString(1, "Careful Driving");
 			}
 			else
 			{
 				wheels->XDrive(XStick);
+				dash->PutString(1, "Normal Driving");
 			}
+
+			time->Stop();
+			time->Reset();
+			time->Start();
 
 			//Dashboard functions
 
 			dash->EncoderCount(1); //Read the percentage of rotations on slider 1 //Works
 
-			dash->PutNumber(2, wheels->GetEncoder());  //TODO: obsolete PutNumber/String as public functions, move them to private
+			dash->PutNumber(2, wheels->GetEncoder());  //TODO: obsolete PutNumber/String
 
-			dash->Acceleration(3, 2); //Read Y acceleration on slider 3
+			dash->Acceleration(3, 3); //Read Z acceleration on slider 3
 
-			dash->Acceleration(4, 3); //Read Z acceleration on slider 4
+			dash->LiftHeight(4);
+
+			//dash->DistancePerEnergy(4); //Read distance/energy ratio on slider 4
+
+			dash->LimitSwitch(1, 1);  //Read top limit switch value on button 1
+
+			dash->LimitSwitch(2, 2);
+
+			dash->SolenoidPair(2, 1); //Read solenoid pair values on line 2
 
 			//sight->DrawOval();
 
 			sight->PutImage();
 
-			//The HasBeenPressed's //TODO: You still can probably make a function for this
+			//The HasBeenPressed's
 
-			if(XStick->GetRawButton(X_A) && flipOneHasBeenPressed == false)
+			if(dash->StickyPress('a'))
 			{
-				flipOneHasBeenPressed = true;
 				air->SolenoidFlip(1);
 			}
 
-			if(XStick->GetRawButton(X_B) && flipTwoHasBeenPressed == false)
+			if(dash->StickyPress('b'))
 			{
-				flipTwoHasBeenPressed = true;
 				air->SolenoidFlip(2);
-			}
-
-			if(XStick->GetRawButton(X_A) == false)
-			{
-				flipOneHasBeenPressed = false;
-			}
-
-			if(XStick->GetRawButton(X_B) == false)
-			{
-				flipTwoHasBeenPressed = false;
 			}
 
 			if(dash->StickyPress('x'))
@@ -135,23 +145,17 @@ public:
 				}
 			}
 
-			/*if(XStick->GetRawButton(X_X) && changeHasBeenPressed == false)
+			if(dash->StickyPress('y'))
 			{
-				changeHasBeenPressed = true;
-				if(driveCareful == true)
+				if(elevatorTesting == true)
 				{
-					driveCareful = false;
+					elevatorTesting = false;
 				}
-				else if(driveCareful == false)
+				else if(elevatorTesting == false)
 				{
-					driveCareful = true;
+					elevatorTesting = true;
 				}
 			}
-
-			if(XStick->GetRawButton(X_X) == false)
-			{
-				changeHasBeenPressed = false;
-			}*/
 
 			/*if(XStick->GetRawButton(X_X))
 			{
@@ -171,7 +175,10 @@ public:
 				if(speed > 1)
 				{speed = 1;}
 
-				testMotor->Set(speed);
+				if(XStick->GetRawButton(X_LEFT_BUMPER))
+				{testMotor->Set(-speed);}
+				else
+				{testMotor->Set(speed);}
 			}
 			else
 			{
@@ -180,17 +187,16 @@ public:
 				testMotor->Set(0);
 			}*/
 
-
 			//Encoder Functions
 
-			if(XStick->GetRawButton(X_Y))
+			/*if(XStick->GetRawButton(X_Y))
 			{
 				if(XStick->GetRawButton(X_LEFT_BUMPER))
 				{
 					wheels->TurnEncoder(-2, .6, .6);
 				}
 				else {wheels->TurnEncoder(2, .6, .6);}
-			}
+			}*/
 
 			Wait(0.005);				// wait for a motor update time
 		}
