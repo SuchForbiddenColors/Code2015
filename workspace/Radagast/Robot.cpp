@@ -59,10 +59,14 @@ public:
 
 		//wheels->InitWatchdog(true); //TODO: Doesn't work; kinda need it.
 
-		bool testHasBeenPressed = false;
-
 		bool driveCareful = false;
 		bool elevatorTesting = false;
+		bool driveX = true;
+
+		float heightErrorBound = 1;
+		float heightSlowBound = 4;
+		dash->LiftHeight(0);
+		float goalHeight = dash->currentHeight;
 
 		time->Stop(); time->Reset();
 
@@ -74,13 +78,14 @@ public:
 			//Analyzing previous loop
 
 			dash->AddEnergyToTotal(time->Get());
-			dash->SetDistance();
+			dash->SetEncoderDistance();
 
 			//How's My Driving?
 
 			if(elevatorTesting)
 			{
-				rise->ManualLift(XStick->GetRawAxis(1)); //1 is a controller's LeftY axis
+				rise->ManualLift(XStick->GetRawAxis(1) * -1); //1 is a controller's LeftY axis
+													//No idea why, but forward gives negative numbers
 				dash->PutString(1, "Testing Elevator");
 			}
 			else
@@ -90,6 +95,7 @@ public:
 				dash->PutString(1, "Careful Driving");
 			}
 			else
+			if(driveX)
 			{
 				wheels->XDrive(XStick);
 				dash->PutString(1, "Normal Driving");
@@ -121,7 +127,94 @@ public:
 
 			sight->PutImage();
 
-			//The HasBeenPressed's
+			//The Shift-Specific Functions
+
+			dash->PutString(6, "Shift: None"); //Will be trumped by any other shift info
+
+			if(XStick->GetRawButton(X_LEFT_BUMPER))
+			{						//How's My Driving functions
+				dash->PutString(6, "Shift: Driving Style");
+
+				if(dash->StickyPress('a'))
+				{
+					driveX = true;
+					driveCareful = false;
+					elevatorTesting = false;
+				}
+
+				if(dash->StickyPress('x'))
+				{
+					driveCareful = true;
+					driveX = false;
+					elevatorTesting = false;
+				}
+
+				if(dash->StickyPress('y'))
+				{
+					elevatorTesting = true;
+					driveX = false;
+					driveCareful = false;
+				}
+			}
+
+			if(XStick->GetRawButton(X_LEFT_CLICK))
+			{						//Elevator functions
+				dash->PutString(6, "Shift: Elevator");
+
+				if(dash->StickyPress('a'))
+				{
+					goalHeight = 0; //Grab from ground
+				}
+
+				if(dash->StickyPress('b'))
+				{
+					goalHeight = 26; //Place on one
+				}
+
+				if(dash->StickyPress('x'))
+				{
+					goalHeight = 38; //Place on two
+				}
+
+				if(dash->StickyPress('y'))
+				{
+					goalHeight = 50; //Place on three
+				}
+
+				if(dash->StickyPress('r'))
+				{
+					dash->LiftHeight(12); //Give dummie number to just reset height value
+					goalHeight = dash->currentHeight;
+				}
+			}
+
+			if(fabs(dash->currentHeight - goalHeight) > heightErrorBound)
+			{
+				float speedReduction = 1;
+
+				if(fabs(dash->currentHeight - goalHeight) < heightSlowBound)
+				{
+					speedReduction = 2;
+				}
+				else
+				{
+					speedReduction = 1;
+				}
+
+				if((dash->currentHeight - goalHeight) > 0)
+				{
+					rise->ManualLift(-.8 / speedReduction);
+					     //Limit Switches accounted for in ManualLift()
+				}
+				else
+				{
+					rise->ManualLift(.8 / speedReduction);
+				}
+			}
+			else
+			{
+				rise->ManualLift(0);
+			}
 
 			if(dash->StickyPress('a'))
 			{
@@ -132,60 +225,6 @@ public:
 			{
 				air->SolenoidFlip(2);
 			}
-
-			if(dash->StickyPress('x'))
-			{
-				if(driveCareful == true)
-				{
-					driveCareful = false;
-				}
-				else if(driveCareful == false)
-				{
-					driveCareful = true;
-				}
-			}
-
-			if(dash->StickyPress('y'))
-			{
-				if(elevatorTesting == true)
-				{
-					elevatorTesting = false;
-				}
-				else if(elevatorTesting == false)
-				{
-					elevatorTesting = true;
-				}
-			}
-
-			/*if(XStick->GetRawButton(X_X))
-			{
-				testHasBeenPressed = true;
-			}
-			else
-			{
-				testHasBeenPressed = false;
-			}
-
-			if(testHasBeenPressed) //Works
-			{
-				time->Start();
-				float speed;
-				speed = time->Get() / 3; //Time returns in seconds
-
-				if(speed > 1)
-				{speed = 1;}
-
-				if(XStick->GetRawButton(X_LEFT_BUMPER))
-				{testMotor->Set(-speed);}
-				else
-				{testMotor->Set(speed);}
-			}
-			else
-			{
-				time->Stop();
-				time->Reset();
-				testMotor->Set(0);
-			}*/
 
 			//Encoder Functions
 

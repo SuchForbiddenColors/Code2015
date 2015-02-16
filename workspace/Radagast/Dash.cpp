@@ -17,10 +17,12 @@ Dash::Dash(Wheelz *wheels, Pneumatics *air, BuiltInAccelerometer *excel, Joystic
 	a_HasBeenPressed = false;
 	b_HasBeenPressed = false;
 	start_HasBeenPressed = false;
+	rightBumper_HasBeenPressed = false;
 
 	leftEnergy = 0;
 	rightEnergy = 0;
 	distance = 0;
+	currentHeight = 0;
 }
 
 void Dash::PutString(int lineNum, string message)
@@ -207,7 +209,7 @@ void Dash::AddEnergyToTotal(double time)
 	rightEnergy += time * whe->rightMotorInput;
 }
 
-void Dash::SetDistance()
+void Dash::SetEncoderDistance()
 {
 	distance = whe->GetEncoder() / ENCODER_ONE_PULSES_PER_REVOLUTION * DRIVE_WHEEL_DISTANCE_PER_REVOLUTION;
 										//Turns pulses into distance in feet
@@ -284,9 +286,13 @@ void Dash::SolenoidPair(int lineNumber, int solenoidPair)
 
 void Dash::LiftHeight(int sliderNum)
 {
-	float value = ele->stringPot->Get();
-									//Should return in inches
-	PutNumber(sliderNum, value);
+	currentHeight = 54.95 - ele->stringPot->Get();
+		//TODO: Adjust for realbot
+
+	if(sliderNum == 1 || sliderNum == 2 || sliderNum == 3 || sliderNum == 4)
+	{
+		PutNumber(sliderNum, currentHeight);
+	}
 }
 
 void Dash::DistancePerEnergy(int sliderNum)
@@ -385,6 +391,20 @@ bool Dash::StickyPress(char button)
 		}
 
 			return false;
+	}
+
+	if(button == 'r') //r is for right bumper
+	{
+		if(one->GetRawButton(X_RIGHT_BUMPER) && rightBumper_HasBeenPressed == false)
+		{
+			rightBumper_HasBeenPressed = true;
+			return true;
+		}
+
+		if(one->GetRawButton(X_RIGHT_BUMPER) == false)
+		{
+			rightBumper_HasBeenPressed = false;
+		}
 	}
 		return false; //If we get all the way through with no buttons selected
 }													//Just return false
