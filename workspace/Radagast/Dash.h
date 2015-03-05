@@ -25,7 +25,8 @@ protected:
 
 	float leftEnergy;
 	float rightEnergy;
-	float distance; //TODO: Get leftDistance and rightDistance after we have wheel-specific encoders
+	float distance1; //TODO: Get leftDistance and rightDistance after we have wheel-specific encoders
+	float distance2;
 
 public:
 	float currentHeight;
@@ -41,7 +42,7 @@ public:
 	void AddEnergyToTotal(double time);
 	void SetEncoderDistance();
 
-	void EncoderCount(int sliderNum); //Writes the percentage of encoder rotations on a slider on the dashboard
+	void EncoderCount(int sliderNum, int encoderNumber); //Writes the percentage of encoder rotations on a slider on the dashboard
 	void Acceleration(int sliderNum, int axis);
 	void LimitSwitch(int buttonNum, int limitSwitch); //Returns value of chosen switch
 	void SolenoidPair(int lineNum, int solenoidPair);

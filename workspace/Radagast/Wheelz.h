@@ -5,20 +5,21 @@ class Wheelz
 protected:
 	RobotDrive* wheels;
 	Encoder *encoder1;
+	Encoder *encoder2;
 
 
 public:
 	float leftMotorInput;
 	float rightMotorInput;
 
-	Wheelz(int leftMotor, int rightMotor, int aChannel, int bChannel);
+	Wheelz(int leftMotor, int rightMotor, int aChannel, int bChannel, int cChannel, int dChannel);
 
 	void XDrive(GenericHID * XStick);
 	void CarefulDrive(GenericHID * XStick);
 	void DissectedDrive(float forward, float turn);
 
-	float GetEncoder();
-	bool GetDirectionEncoder();
+	float GetEncoder(int encoderNumber);
+	bool GetDirectionEncoder(int encoderNumber);
 	void TurnEncoder(float rotations, float leftSpeed, float rightSpeed); //TODO: Assign numbered encoders to motors, just spin specific ones
 
 	void InitWatchdog(bool is);

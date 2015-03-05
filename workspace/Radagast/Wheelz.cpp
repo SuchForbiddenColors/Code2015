@@ -2,10 +2,11 @@
 #include "Defines.h"
 #include "Math.h"
 
-Wheelz::Wheelz(int leftMotor, int rightMotor, int aChannel, int bChannel)
+Wheelz::Wheelz(int leftMotor, int rightMotor, int aChannel, int bChannel, int cChannel, int dChannel)
 {
 	wheels = new RobotDrive(leftMotor, rightMotor);
 	encoder1 = new Encoder(aChannel, bChannel);
+	encoder2 = new Encoder(cChannel, dChannel);
 
 	leftMotorInput = 0;
 	rightMotorInput = 0;
@@ -103,7 +104,7 @@ void Wheelz::CarefulDrive(GenericHID * XStick)
 		forwardInput = 0; //Light buffer
 	}
 
-	if(fabs(turnInput) < .13)
+	if(fabs(turnInput) < .3)
 	{
 		turnInput = 0; //Heavy buffer; because any turning precludes forward motion
 	}
@@ -125,15 +126,35 @@ void Wheelz::CarefulDrive(GenericHID * XStick)
 	DissectedDrive(forward, turn);
 }
 
-float Wheelz::GetEncoder()
+float Wheelz::GetEncoder(int encoderNumber)
 {
-	float value = encoder1->Get();
+	float value;
+
+	if(encoderNumber == 1)
+	{
+		value = encoder1->Get();
+	}
+
+	if(encoderNumber == 2)
+	{
+		value = encoder2->Get();
+	}
+
 	return value;
 }
 
-bool Wheelz::GetDirectionEncoder()
+bool Wheelz::GetDirectionEncoder(int encoderNumber)
 {
-	bool value = encoder1->GetDirection();
+	bool value;
+	if(encoderNumber == 1)
+	{
+		value = encoder1->GetDirection();
+	}
+
+	if(encoderNumber == 2)
+	{
+		value = encoder2->GetDirection();
+	}
 	return value;
 }
 

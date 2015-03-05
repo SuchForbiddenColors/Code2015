@@ -31,7 +31,7 @@ class Robot: public SampleRobot
 public:
 	Robot()
 	{
-		wheels = new Wheelz(MOTOR_DRIVE_LEFT, MOTOR_DRIVE_RIGHT, ENCODER_CHANNEL_A, ENCODER_CHANNEL_B);
+		wheels = new Wheelz(MOTOR_DRIVE_LEFT, MOTOR_DRIVE_RIGHT, ENCODER_CHANNEL_A, ENCODER_CHANNEL_B, ENCODER_CHANNEL_C, ENCODER_CHANNEL_D);
 		XStick = new Joystick(XSTICK_PORT);
 		air = new Pneumatics();
 		excel = new BuiltInAccelerometer();
@@ -70,7 +70,7 @@ public:
 
 		time->Stop(); time->Reset();
 
-		sight->StartImageAcquisition();
+		//sight->StartImageAcquisition();
 
 		while (IsOperatorControl() && IsEnabled())
 		{
@@ -107,9 +107,11 @@ public:
 
 			//Dashboard functions
 
-			dash->EncoderCount(1); //Read the percentage of rotations on slider 1 //Works
+			dash->EncoderCount(1, 1); //Read the percentage of rotations of encoder1 on slider 1 //Works
 
-			dash->PutNumber(2, wheels->GetEncoder());  //TODO: obsolete PutNumber/String
+			dash->EncoderCount(2, 2);
+
+			//dash->PutNumber(2, wheels->GetEncoder(1));  //TODO: obsolete PutNumber/String
 
 			dash->Acceleration(3, 3); //Read Z acceleration on slider 3
 
@@ -163,7 +165,7 @@ public:
 
 				if(dash->StickyPress('a'))
 				{
-					goalHeight = 0; //Grab from ground
+					goalHeight = 8; //Grab from ground
 				}
 
 				if(dash->StickyPress('b'))
@@ -216,14 +218,19 @@ public:
 				rise->ManualLift(0);
 			}
 
-			if(dash->StickyPress('a'))
+			if((XStick->GetRawButton(X_LEFT_CLICK) || XStick->GetRawButton(X_LEFT_BUMPER) || XStick->GetRawButton(X_BACK)) == false)
 			{
-				air->SolenoidFlip(1);
-			}
+				if(dash->StickyPress('a'))
+				{
+					air->SolenoidFlip(1);
+					air->SolenoidFlip(2);
+				}
 
-			if(dash->StickyPress('b'))
-			{
-				air->SolenoidFlip(2);
+				if(dash->StickyPress('b'))
+				{
+					air->SolenoidFlip(3);
+					air->SolenoidFlip(4);
+				}
 			}
 
 			//Encoder Functions
@@ -239,7 +246,7 @@ public:
 
 			Wait(0.005);				// wait for a motor update time
 		}
-		sight->StopImageAcquisition();
+		//sight->StopImageAcquisition();
 	}
 
 	/**
