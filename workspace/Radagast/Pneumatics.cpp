@@ -15,17 +15,17 @@ Pneumatics::Pneumatics()
 	sol7 = new Solenoid(6);
 	sol8 = new Solenoid(7);
 
-	sol1->Set(false); //Extend piston
-	solOneOn = false;
+	sol1->Set(true); //To start out with retracted pistons
+	solOneOn = true;
 
-	sol2->Set(true); //Retract piston
-	solTwoOn = true;
+	sol2->Set(false);
+	solTwoOn = false;
 
 	sol3->Set(true);
 	solThreeOn = true;
 
-	sol4->Set(true);
-	solFourOn = true;
+	sol4->Set(false);
+	solFourOn = false;
 
 	sol5->Set(true);
 	solFiveOn = true;

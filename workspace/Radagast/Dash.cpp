@@ -17,15 +17,18 @@ Dash::Dash(Wheelz *wheels, Pneumatics *air, BuiltInAccelerometer *excel, Joystic
 	a_HasBeenPressed = false;
 	b_HasBeenPressed = false;
 	start_HasBeenPressed = false;
+	rightBumper_HasBeenPressed = false;
 
 	leftEnergy = 0;
 	rightEnergy = 0;
-	distance = 0;
+	distance1 = 0;
+	distance2 = 0;
+	currentHeight = 20;
 }
 
 void Dash::PutString(int lineNum, string message)
 {									// Copypaste alley
-	if(lineNum == 1)
+	if(lineNum == 1)  //TODO: Build the string manually using the lineNum - 1 input
 		{
 			SmartDashboard::PutString("DB/String 0", message);
 		}
@@ -207,15 +210,16 @@ void Dash::AddEnergyToTotal(double time)
 	rightEnergy += time * whe->rightMotorInput;
 }
 
-void Dash::SetDistance()
+void Dash::SetEncoderDistance()
 {
-	distance = whe->GetEncoder() / ENCODER_ONE_PULSES_PER_REVOLUTION * DRIVE_WHEEL_DISTANCE_PER_REVOLUTION;
+	distance1 = whe->GetEncoder(1) / ENCODER_ONE_PULSES_PER_REVOLUTION * DRIVE_WHEEL_DISTANCE_PER_REVOLUTION;
 										//Turns pulses into distance in feet
+	distance2 = whe->GetEncoder(2) / ENCODER_ONE_PULSES_PER_REVOLUTION * DRIVE_WHEEL_DISTANCE_PER_REVOLUTION;
 }
 
-void Dash::EncoderCount(int sliderNum)
+void Dash::EncoderCount(int sliderNum, int encoderNumber)
 {
-	float rotationCount = whe->GetEncoder() / ENCODER_ONE_PULSES_PER_REVOLUTION;
+	float rotationCount = whe->GetEncoder(encoderNumber) / ENCODER_ONE_PULSES_PER_REVOLUTION;
 	rotationCount *= 100; //Make it a percentage
 
 	PutNumber(sliderNum, rotationCount);
@@ -284,9 +288,13 @@ void Dash::SolenoidPair(int lineNumber, int solenoidPair)
 
 void Dash::LiftHeight(int sliderNum)
 {
-	float value = ele->stringPot->Get();
-									//Should return in inches
-	PutNumber(sliderNum, value);
+	currentHeight = 54.95 - ele->stringPot->Get(); //59.05 This is a realbot estimate; 54.95 on practice bot
+		//TODO: Adjust for realbot
+
+	if(sliderNum == 1 || sliderNum == 2 || sliderNum == 3 || sliderNum == 4)
+	{
+		PutNumber(sliderNum, currentHeight);
+	}
 }
 
 void Dash::DistancePerEnergy(int sliderNum)
@@ -297,7 +305,7 @@ void Dash::DistancePerEnergy(int sliderNum)
 		ratio = 0;
 	}
 
-	ratio = distance / (leftEnergy * 40); //Want changes in distance and in energy to be noticeable
+	ratio = distance1 / (leftEnergy * 40); //Want changes in distance and in energy to be noticeable
 										 // It's an art, not a science.
 	PutNumber(sliderNum, ratio);
 }
@@ -385,6 +393,20 @@ bool Dash::StickyPress(char button)
 		}
 
 			return false;
+	}
+
+	if(button == 'r') //r is for right bumper
+	{
+		if(one->GetRawButton(X_RIGHT_BUMPER) && rightBumper_HasBeenPressed == false)
+		{
+			rightBumper_HasBeenPressed = true;
+			return true;
+		}
+
+		if(one->GetRawButton(X_RIGHT_BUMPER) == false)
+		{
+			rightBumper_HasBeenPressed = false;
+		}
 	}
 		return false; //If we get all the way through with no buttons selected
 }													//Just return false

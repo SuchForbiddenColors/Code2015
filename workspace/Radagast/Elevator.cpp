@@ -11,8 +11,6 @@ Elevator::Elevator(int liftMotorPort, int stringPotPort, int upperLimitSwitchPor
 
 void Elevator::ManualLift(float speed)
 {
-	speed *= -1; //No idea why, but forward gives negative numbers
-
 	if(speed > 1)
 	{speed = 1;}
 
