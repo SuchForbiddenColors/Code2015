@@ -5,7 +5,7 @@
 Wheelz::Wheelz(int leftMotor, int rightMotor, int aChannel, int bChannel, int cChannel, int dChannel)
 {
 	wheels = new RobotDrive(leftMotor, rightMotor);
-	encoder1 = new Encoder(aChannel, bChannel);
+	encoder1 = new Encoder(aChannel, bChannel); //LeftMotor Encoder
 	encoder2 = new Encoder(cChannel, dChannel);
 
 	leftMotorInput = 0;
@@ -143,6 +143,23 @@ float Wheelz::GetEncoder(int encoderNumber)
 	return value;
 }
 
+float Wheelz::GetDistance(int encoderNumber)
+{
+	float value;
+	
+	if(encoderNumber == 1)
+	{
+		value = encoder1->Get() * DRIVE_WHEEL_DISTANCE_PER_REVOLUTION / ENCODER_ONE_PULSES_PER_REVOLUTION;
+	}
+	
+	if(encoderNumber == 2)
+	{
+		value = encoder2->Get() * DRIVE_WHEEL_DISTANCE_PER_REVOLUTION / ENCODER_TWO_PULSES_PER_REVOLUTION;
+	}
+	
+	return value;
+}
+
 bool Wheelz::GetDirectionEncoder(int encoderNumber)
 {
 	bool value;
@@ -156,6 +173,35 @@ bool Wheelz::GetDirectionEncoder(int encoderNumber)
 		value = encoder2->GetDirection();
 	}
 	return value;
+}
+
+void Wheelz::TravelForward(float distance, float speed) //Auto function, meant to run once per distance
+{
+	encoder1->Reset(); encoder2->Reset();
+	
+	float leftSpeed, rightSpeed;
+	
+	while(GetDistance(1) =< distance) //Assuming distance to always be positive.
+	{
+		if(GetDistance(1) > GetDistance(2) + GetDistance(2) / 10)
+		{                                    //Buffer
+			leftSpeed *= .75;
+		}
+		
+		if(GetDistance(1) + GetDistance(1) / 10 < GetDistance(2))
+		{
+			rightSpeed *= .75;
+		}
+		
+		if(distance - GetDistance(1) < 6)
+		{
+			leftSpeed *= .5;
+			rightSpeed *= .5;
+		}
+		wheels->SetLeftRightMotorInputs(leftSpeed, rightSpeed);
+	}
+	
+	wheels->SetLeftRightMotorInputs(0,0);
 }
 
 void Wheelz::TurnEncoder(float rotations, float leftSpeed, float rightSpeed)
