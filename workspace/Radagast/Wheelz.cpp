@@ -179,7 +179,8 @@ void Wheelz::TravelForward(float distance, float speed) //Auto function, meant t
 {
 	encoder1->Reset(); encoder2->Reset();
 	
-	float leftSpeed, rightSpeed;
+	float leftSpeed = speed;
+	float rightSpeed = speed;
 	
 	while(GetDistance(1) =< distance) //Assuming distance to always be positive.
 	{
