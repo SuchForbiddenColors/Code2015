@@ -19,7 +19,9 @@ public:
 	void DissectedDrive(float forward, float turn);
 
 	float GetEncoder(int encoderNumber);
+	float GetDistance(int encoderNumber);
 	bool GetDirectionEncoder(int encoderNumber);
+	void TravelForward(float distance, float speed);
 	void TurnEncoder(float rotations, float leftSpeed, float rightSpeed); //TODO: Assign numbered encoders to motors, just spin specific ones
 
 	void InitWatchdog(bool is);
