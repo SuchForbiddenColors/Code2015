@@ -205,6 +205,30 @@ void Wheelz::TravelForward(float distance, float speed) //Auto function, meant t
 	wheels->SetLeftRightMotorInputs(0,0);
 }
 
+void Wheelz::TravelAngle(float angle, float speed, bool clockwise)
+{
+        encoder1->Reset(); encoder2->Reset();
+
+float leftSpeed, rightSpeed;
+if(clockwise)
+{
+leftSpeed = speed;
+rightSpeed = -speed;
+}
+else
+{
+leftSpeed = -speed;
+rightSpeed = speed;
+}
+
+while((fabs(GetDistance(1))*TURNING_ANGLE_PER_INCH < angle)
+{
+wheels->SetLeftRightMotorInputs(leftSpeed, rightSpeed);
+} 
+
+wheels->SetLeftRightMotorInputs(0,0);
+}
+
 void Wheelz::TurnEncoder(float rotations, float leftSpeed, float rightSpeed)
 {											//We want these positive regardless of forward or backward
 	float startingRotation;
