@@ -427,7 +427,7 @@ bool Dash::StickyPress(char button)
 		}
 	}
 
-	if(button == 'm')//TwoStick's leftBumper
+	if(button == 'm')//TwoStick's rightBumper
 		{
 			if(twe->GetRawButton(X_RIGHT_BUMPER) && m_HasBeenPressed == false)
 			{
