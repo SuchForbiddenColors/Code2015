@@ -5,6 +5,7 @@
 #include "Math.h"
 #include "Dash.h"
 
+
 using namespace std;
 
 /* The SampleRobot class is the base of a robot application that will automatically call your
@@ -23,31 +24,51 @@ class Robot: public SampleRobot
 	CameraServer *camera;
 	Vision *sight;
 	Dash * dash;
+	Elevator *rise;
 	Timer *time;
 	Joystick *XStick;
+	Joystick *TwoStick;
 	Victor *testMotor;
 
 public:
 	Robot()
 	{
-		wheels = new Wheelz(MOTOR_DRIVE_LEFT, MOTOR_DRIVE_RIGHT, ENCODER_CHANNEL_A, ENCODER_CHANNEL_B);
+		wheels = new Wheelz(MOTOR_DRIVE_LEFT, MOTOR_DRIVE_RIGHT, ENCODER_CHANNEL_A, ENCODER_CHANNEL_B, ENCODER_CHANNEL_C, ENCODER_CHANNEL_D);
 		XStick = new Joystick(XSTICK_PORT);
+		TwoStick= new Joystick(1);
 		air = new Pneumatics();
 		excel = new BuiltInAccelerometer();
 		camera = CameraServer::GetInstance();
 		sight = new Vision();
-		dash = new Dash(wheels, air, excel);
+		rise = new Elevator(MOTOR_LIFT_CHANNEL, STRING_POTENTIOMETER_CHANNEL, UPPER_LIMIT_CHANNEL, LOWER_LIMIT_CHANNEL);
+		dash = new Dash(wheels, air, excel, XStick, TwoStick, rise);
 		time = new Timer();
 		testMotor = new Victor(TEST_MOTOR_CHANNEL);
 
 		wheels->SetExpiration(.5);
-cout<<"robotProgram here";
 	}
 
 
 	void Autonomous()
 	{
 
+		//wheels->InitWatchdog(false);
+
+		/*
+		if(dash->GetString(6) == "None" )
+		{
+			dash->PutString(5, "Checked string");
+		}
+		else
+		{
+		wheels->TravelForward(100, .35, 12000); //Supposed to go backward
+
+		wheels->TravelForward(5, -.35, 1000);
+
+		wheels->TravelAngle(125, .35, false, 7000); //Turn anticlockwise 62.5 degrees
+
+		wheels->DissectedDrive(0,0); //Fingers crossed
+		}*/
 
 	}
 
@@ -56,84 +77,251 @@ cout<<"robotProgram here";
 	void OperatorControl()
 	{
 
-		//wheels->InitWatchdog(true); //TODO: Doesn't work; kinda need it.
-		dash->PutString(1, "Relinquished");
+		//wheels->InitWatchdog(false); //TODO: Doesn't work; kinda need it.
 
-		bool testHasBeenPressed;
+		bool driveCareful = false;
+		bool elevatorTesting = false;
+		bool secondStick = true;
+		bool driveX = true;
+		bool HasBeenChanged = false;
+		int plusTwo = 0; // Extra lift height for platform
+
+		float heightErrorBound = .3;
+		float heightSlowBound = 6;
+		dash->LiftHeight(0);
+		float goalHeight = dash->currentHeight;
 
 		time->Stop(); time->Reset();
 
-		dash->PutString(6, dash->GetString(5)); //Works
-
-		sight->StartImageAcquisition();
+		//sight->StartImageAcquisition();
 
 		while (IsOperatorControl() && IsEnabled())
 		{
 
-			wheels->CarefulDrive(XStick);
+			//Analyzing previous loop
 
-			dash->EncoderCount(1); //Read the percentage of rotations on slider 1 //Works
+			dash->AddEnergyToTotal(time->Get());
+			dash->SetEncoderDistance();
 
-			dash->PutNumber(2, wheels->GetEncoder());  //TODO: obsolete PutNumber/String as public functions, move them to private
+			//How's My Driving?
 
-			dash->Acceleration(3, 2); //Read Y acceleration on slider 3
-
-			dash->Acceleration(4, 3); //Read Z acceleration on slider 4 //Works
-
-			//sight->DrawOval();
-
-			sight->PutImage(); //Works
-
-			if(XStick->GetRawButton(X_A))
+			if(elevatorTesting)
 			{
-				air->SolenoidFlip(1);
-			}
+				rise->ManualLift(XStick->GetRawAxis(1) );
 
-			if(XStick->GetRawButton(X_B))
-			{
-				air->SolenoidFlip(2);
-			}
-
-			if(XStick->GetRawButton(X_X))
-			{
-				testHasBeenPressed = true;
+				dash->PutString(1, "Testing Elevator");
 			}
 			else
+			if(driveCareful)
 			{
-				testHasBeenPressed = false;
-			}
-
-			if(testHasBeenPressed) //Works
-			{
-				time->Start();
-				float speed;
-				speed = time->Get() / 3; //Time returns in seconds
-
-				if(speed > 1)
-				{speed = 1;}
-
-				testMotor->Set(speed);
+				wheels->CarefulDrive(XStick);
+				dash->PutString(1, "Careful Driving");
 			}
 			else
+			if(driveX)
 			{
-				time->Stop();
-				time->Reset();
-				testMotor->Set(0);
+				wheels->XDrive(XStick);
+				dash->PutString(1, "Normal Driving");
 			}
 
+			time->Stop();
+			time->Reset();
+			time->Start();
 
-			if(XStick->GetRawButton(X_Y))
-			{
-				if(XStick->GetRawButton(X_LEFT_BUMPER))
+			//Dashboard functions
+
+			dash->EncoderCount(1, 1); //Read the percentage of rotations of encoder1 on slider 1 //Works
+
+			dash->EncoderCount(2, 2);
+
+			//dash->PutNumber(2, wheels->GetEncoder(2));  //TODO: obsolete PutNumber/String
+
+			dash->Acceleration(3, 3); //Read Z acceleration on slider 3
+
+			dash->LiftHeight(4);
+
+			//dash->DistancePerEnergy(4); //Read distance/energy ratio on slider 4
+
+			dash->LimitSwitch(1, 1);  //Read top limit switch value on button 1
+
+			dash->LimitSwitch(2, 2);
+
+			dash->Pistons(2); //Read claw values on line 2
+
+			//sight->PutImage();
+
+			//The Shift-Specific Functions
+
+			dash->PutString(6, "Shift: None"); //Will be trumped by any other shift info
+
+			if(XStick->GetRawButton(X_LEFT_BUMPER))
+			{						//How's My Driving functions
+				dash->PutString(6, "Shift: Driving Style");
+
+				/*if(dash->StickyPress('a'))
 				{
-					wheels->TurnEncoder(-2, testMotor, .6);
+					driveX = true;
+					driveCareful = false;
+					elevatorTesting = false;
 				}
-				else {wheels->TurnEncoder(2, testMotor, .6);}
+
+				if(dash->StickyPress('x'))
+				{
+					driveCareful = true;
+					driveX = false;
+					elevatorTesting = false;
+				}
+
+				if(dash->StickyPress('y'))
+				{
+					elevatorTesting = true;
+					driveX = false;
+					driveCareful = false;
+				}*/
+
+				driveX = false;
+				elevatorTesting = false;
+				driveCareful = true;
 			}
+			else
+			{
+				driveX = true;
+				elevatorTesting = false;
+				driveCareful = false;
+			}
+
+			if(XStick->GetRawButton(X_LEFT_CLICK))
+			{						//Elevator functions
+				dash->PutString(6, "Shift: Elevator");
+
+				if(dash->StickyPress('s'))
+				{
+					if(plusTwo == 0)
+					{
+						plusTwo = 2;
+
+						dash->PutString(3, "2 extra inches");
+					}
+					else
+					{
+						plusTwo = 0;
+
+						dash->PutString(3, "No extra inches");
+					}
+				}
+
+				if(dash->StickyPress('a'))
+				{
+					goalHeight = 8 + plusTwo; //Grab from ground
+					HasBeenChanged = true;
+				}
+
+				if(dash->StickyPress('b'))
+				{
+					goalHeight = 21 + plusTwo; //Grab second
+					HasBeenChanged = true;
+				}
+
+				if(dash->StickyPress('x'))
+				{
+					goalHeight = 33 + plusTwo; //Grab third
+					HasBeenChanged = true;
+				}
+
+				if(dash->StickyPress('y'))
+				{
+					goalHeight = 45 + (plusTwo * 5); //Grab fourth
+					HasBeenChanged = true;
+				}
+
+				if(dash->StickyPress('r'))
+				{
+					dash->LiftHeight(12); //Give dummie number to just reset height value
+					goalHeight = dash->currentHeight;
+				}
+			}
+
+			if(elevatorTesting == false)
+			{						//String pot currently unavailable
+			if(fabs(dash->currentHeight - goalHeight) > heightErrorBound)
+			{
+				float speedReduction = 1;
+
+				if(fabs(dash->currentHeight - goalHeight) < heightSlowBound)
+				{
+					speedReduction = 2;
+				}
+				else
+				{
+					speedReduction = 1;
+				}
+
+				if((dash->currentHeight - goalHeight) > 0)
+				{
+					rise->ManualLift(.3 / speedReduction);
+					     //Limit Switches accounted for in ManualLift()
+				}
+				else
+				{
+					speedReduction = 1;
+					rise->ManualLift(-.48 / speedReduction);
+					//this is up
+				}
+			}
+			else
+			{
+				rise->ManualLift(0);
+				HasBeenChanged = false;
+			}
+			}
+
+			if(XStick->GetRawButton(X_A) && XStick->GetRawButton(X_START) && XStick->GetRawButton(X_BACK))
+			{
+				if(secondStick)
+				{
+					secondStick = false;
+				}
+				else
+				{
+					secondStick = true;
+				}
+
+				if(HasBeenChanged == false)
+				{
+				dash->LiftHeight(0);
+				goalHeight = dash->currentHeight;
+				}
+			}
+
+			if(secondStick)
+			{
+				if(HasBeenChanged == false)
+				{
+					rise->ManualLift(TwoStick->GetRawAxis(1));
+					dash->LiftHeight(0);
+					goalHeight = dash->currentHeight;
+				}
+			}
+
+			if((XStick->GetRawButton(X_LEFT_CLICK) || XStick->GetRawButton(X_LEFT_BUMPER) || XStick->GetRawButton(X_BACK)) == false)
+			{
+				if(dash->StickyPress('a') || dash->StickyPress('z'))
+				{
+					air->SolenoidFlip(1);
+					air->SolenoidFlip(2);
+				}
+
+				if(dash->StickyPress('b') || dash->StickyPress('m'))
+				{
+					air->SolenoidFlip(3);
+					air->SolenoidFlip(4);
+				}
+			}
+
 
 			Wait(0.005);				// wait for a motor update time
 		}
-		sight->StopImageAcquisition();
+		//sight->StopImageAcquisition();
 	}
 
 	/**
@@ -143,6 +331,8 @@ cout<<"robotProgram here";
 	{
 	}
 };
+
+
 
 START_ROBOT_CLASS(Robot);
 
